@@ -1,0 +1,75 @@
+    BUCKET_NAME="vectorprediction"
+    JOB_NAME="vectorprediction$(date +"%Y%m%d_%H%M%S")"
+    JOB_DIR=gs://$BUCKET_NAME/vector_job_directory
+    TRAINING_PACKAGE_PATH="./vectorprediction/"
+    MAIN_TRAINER_MODULE="vectorprediction.Trendspotting_vectorModel_gcp"
+    REGION=us-central1
+    RUNTIME_VERSION=1.10
+    PYTHON_VERSION=3.5
+    SCALE_TIER=BASIC
+	
+***************	
+export GOOGLE_APPLICATION_CREDENTIALS="./key.json"		
+********************	
+	
+	
+MODEL_DIR="gs://vectorprediction/vector_prediction_20190309_154314/"
+INPUT_FILE="input.json"
+FRAMEWORK="SCIKIT_LEARN"
+
+
+
+*********  Create Version  ****************
+
+gcloud ml-engine versions create $VERSION_NAME \
+  --model $MODEL_NAME --origin $MODEL_DIR \
+  --runtime-version=1.10 --framework $FRAMEWORK \
+  --python-version=3.5
+	  
+	  
+	  
+	  
+****** Training Job  ****************	  
+	  
+gcloud ml-engine jobs submit training $JOB_NAME \
+  --job-dir $JOB_DIR \
+  --package-path $TRAINING_PACKAGE_PATH \
+  --module-name $MAIN_TRAINER_MODULE \
+  --region $REGION \
+  --runtime-version=$RUNTIME_VERSION \
+  --python-version=$PYTHON_VERSION \
+  --scale-tier $SCALE_TIER
+  
+ 
+ ******  Prediction  ***********
+ 
+ 
+gcloud ml-engine local predict --model-dir=$MODEL_DIR \
+	--json-instances $INPUT_FILE \
+	--framework $FRAMEWORK --python-version=3.5
+	
+	
+gcloud ml-engine predict --model $MODEL_NAME --version \
+  $VERSION_NAME --json-instances $INPUT_FILE
+  
+  
+  
+  
+  
+************  Create resource ****************
+  
+      gcloud ml-engine models create "vector"
+	  
+	  
+******************  Create Version *******************
+
+MODEL_DIR="gs://vectorprediction/vector_prediction_20190309_161355/"
+VERSION_NAME="Version_1"
+MODEL_NAME="vector"
+FRAMEWORK="SCIKIT_LEARN"
+
+
+gcloud ml-engine versions create $VERSION_NAME \
+  --model $MODEL_NAME --origin $MODEL_DIR \
+  --runtime-version=1.10 --framework $FRAMEWORK \
+  --python-version=3.5
